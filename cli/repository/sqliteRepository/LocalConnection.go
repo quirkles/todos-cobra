@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	ErrDuplicate    = errors.New("record already exists")
-	ErrNotExists    = errors.New("row not exists")
-	ErrUpdateFailed = errors.New("update failed")
-	ErrDeleteFailed = errors.New("delete failed")
+	ErrDuplicate       = errors.New("record already exists")
+	ErrNotExists       = errors.New("row not exists")
+	ErrUpdateFailed    = errors.New("update failed")
+	ErrNothingToDelete = errors.New("nothing was found to delete with that id")
 )
 
 type SQLiteRepository struct {
@@ -93,7 +93,7 @@ func (r *SQLiteRepository) Delete(id int64) error {
 	}
 
 	if rowsAffected == 0 {
-		return ErrDeleteFailed
+		return ErrNothingToDelete
 	}
 
 	return err

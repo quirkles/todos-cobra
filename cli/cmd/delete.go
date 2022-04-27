@@ -6,8 +6,8 @@ package cmd
 
 import (
 	"fmt"
-
 	"github.com/spf13/cobra"
+	"strconv"
 )
 
 // deleteCmd represents the delete command
@@ -21,7 +21,20 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("delete called")
+		if len(args) == 0 {
+			fmt.Printf("Delete command needs an integer argument for the id to delete\n")
+			return
+		}
+		idStr := args[0]
+		id, parseInputErr := strconv.ParseInt(idStr, 10, 64)
+		if parseInputErr != nil {
+			fmt.Printf("Delete command needs an integer argument for the id, got: %s\n", idStr)
+			return
+		}
+		deleteErr := todosRepository.Delete(id)
+		if deleteErr != nil {
+			fmt.Println("Error deleting todo:", deleteErr)
+		}
 	},
 }
 
