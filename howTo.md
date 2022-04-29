@@ -1,29 +1,23 @@
+install go:
+
+https://go.dev/doc/install
+
 Set up folders
 ```
 mkdir todos
 cd todos
-mkdir terraform
-mkdir cli
 ```
 Install cobra
 `go install github.com/spf13/cobra-cli@latest`
+
 init go module
 ```
-cd cli
 go mod init todos
 ```
 Init cobra
 ```
 cobra-cli init --viper
 ```
-Add commands
-```
-cobra-cli add create
-cobra-cli add config
-cobra-cli add set -p 'configCmd'
-```
-
-update initConfig in root.go to initialize the viper config, remove the optional config file
 
 ```go
 func initConfig() {
@@ -38,13 +32,20 @@ func initConfig() {
 
 	viper.AutomaticEnv() // read in environment variables that match
 
-	// If a config file is found, read it in.
+	// If a config file is found, read it in.ciobra
 	if err := viper.ReadInConfig(); err != nil {
 		if err := viper.SafeWriteConfig(); err != nil {
 			fmt.Fprintln(os.Stdout, "Error creating config file", err)
 		}
 	}
 }
+```
+
+Add config commands
+```
+cobra-cli add config
+cobra-cli add set -p 'configCmd'
+cobra-cli add show -p 'configCmd'
 ```
 
 config set:
@@ -67,14 +68,41 @@ config list:
 
 Install the squilte driver:
 
-`go get github.com/mattn/go-sqlite3\`
+`go get github.com/mattn/go-sqlite3`
 
-create LocalConnection: cli/repository/sqliteRepository/LocalConnection.go
+create Todo model
+
+mkdir todo
+touch todo/Todo.go
+
+```go
+package todo
+
+type Todo struct {
+	Id         string
+	Title      string
+	Body       string
+	IsComplete bool
+}
+```
+
+
+
+create LocalConnection: 
+
+mkdir repository  
+
+touch repository/LocalConnection.go
+
+https://github.com/quirkles/todos-cobra/blob/main/cli/repository/sqliteRepository/LocalConnection.go
 
 add migration to root cmd `initConfig`:
 
 ```go
-	dbPath := filepath.Join(home, ".todos.db")
+    ...
+    var todosRepository *sqliteRepository.SQLiteRepository
+    ...
+dbPath := filepath.Join(home, ".todos.db")
 	_, openDbFileErr := os.Open(dbPath)
 	var doMigrate = false
 	if errors.Is(openDbFileErr, os.ErrNotExist) {
@@ -93,26 +121,18 @@ add migration to root cmd `initConfig`:
 	}
 ```
 
-create Todo model
+run any command to create db
 
-cli/todo/Todo.go
-
-```go
-package todo
-
-type Todo struct {
-	Id         string
-	Title      string
-	Body       string
-	IsComplete bool
-}
-```
+`go run main.go config list`
 
 create add command: `cobra-cli add add`
 
 add flag and demo:
 
 ```go
+...
+var todoDescription string
+...
 func init() {
 	rootCmd.AddCommand(addCmd)
 	addCmd.Flags().StringVarP(&todoDescription, "description", "d", "", "Optional description")
@@ -128,8 +148,6 @@ Run: func(cmd *cobra.Command, args []string) {
     saved, err := todosRepository.Create(newTodo)
     if err != nil {
         fmt.Println("Error saving todo", err)
-    } else {
-        fmt.Println("Saved: ", saved)
     }
 },
 ```
